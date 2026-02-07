@@ -40,12 +40,14 @@ install_system_deps() {
         keyd \
         python3-pip \
         python3-venv \
+        python3-dev \
         python3-gi \
         python3-gi-cairo \
         gir1.2-gtk-4.0 \
         libgtk-4-dev \
         portaudio19-dev \
-        libgirepository1.0-dev \
+        libgirepository-2.0-dev \
+        libcairo2-dev \
         wl-clipboard \
         ydotool
     
@@ -56,6 +58,12 @@ install_system_deps() {
 setup_keyd() {
     echo -e "${YELLOW}⌨️  Configuring keyd for global hotkey...${NC}"
     
+    # Check if keyd.rvaiya exists (PPA naming) and symlink it to keyd
+    if [ ! -f /usr/local/bin/keyd ] && [ -f /usr/bin/keyd.rvaiya ]; then
+        echo -e "${YELLOW}🔗 Creating symlink for keyd.rvaiya...${NC}"
+        sudo ln -s /usr/bin/keyd.rvaiya /usr/local/bin/keyd
+    fi
+    
     # Copy keyd config
     sudo cp config/wayvoxtral.conf.example /etc/keyd/wayvoxtral.conf
     
@@ -64,7 +72,12 @@ setup_keyd() {
     sudo systemctl restart keyd
     
     # Reload keyd config
-    sudo keyd reload
+    # Use the symlink or binary directly
+    if command -v keyd > /dev/null; then
+        sudo keyd reload
+    elif command -v keyd.rvaiya > /dev/null; then
+        sudo keyd.rvaiya reload
+    fi
     
     echo -e "${GREEN}✓ keyd configured (Ctrl+Space → F24)${NC}"
 }
@@ -73,15 +86,26 @@ setup_keyd() {
 setup_ydotool() {
     echo -e "${YELLOW}🔧 Configuring ydotool...${NC}"
     
-    # Enable ydotoold service
-    sudo systemctl enable ydotoold
-    sudo systemctl start ydotoold
+    # On Ubuntu 24.04, ydotool 0.1.8 doesn't use ydotoold service
+    # It requires direct access to /dev/uinput
     
-    # Add user to input group for uinput access
+    # Create udev rule for uinput
+    echo -e "${YELLOW}📜 Creating udev rule for /dev/uinput...${NC}"
+    echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' | sudo tee /etc/udev/rules.d/80-uinput.rules > /dev/null
+    
+    # Reload udev rules
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger
+    
+    # Add user to input group for uinput access (if not already)
     sudo usermod -aG input "$USER"
     
-    echo -e "${GREEN}✓ ydotool configured${NC}"
-    echo -e "${YELLOW}⚠️  You may need to log out and back in for group changes${NC}"
+    echo -e "${GREEN}✓ ydotool configured (uinput permissions set)${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}  ⚠️  ATTENTION: YOU MUST LOG OUT AND BACK IN NOW!${NC}"
+    echo -e "${RED}  Group permissions (input) will NOT take effect until you do.${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    sleep 2
 }
 
 # Create Python virtual environment
@@ -158,13 +182,15 @@ main() {
     setup_systemd
     
     echo ""
+    echo ""
     echo -e "${GREEN}✅ WayVoxtral installation complete!${NC}"
     echo ""
-    echo "Next steps:"
+    echo -e "${RED}❗ CRITICAL STEP: LOG OUT AND BACK IN (REQUIRED FOR PERMISSIONS)${NC}"
+    echo ""
+    echo "Then follow these steps:"
     echo "  1. Edit ~/.config/wayvoxtral/config.json and add your Mistral API key"
-    echo "  2. Log out and back in (for input group permissions)"
-    echo "  3. Start the service: systemctl --user start wayvoxtral"
-    echo "  4. Press Ctrl+Space to start recording!"
+    echo "  2. Start the service: systemctl --user start wayvoxtral"
+    echo "  3. Press Ctrl+Space to start recording!"
     echo ""
     echo "Useful commands:"
     echo "  - Check status: systemctl --user status wayvoxtral"

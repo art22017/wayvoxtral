@@ -10,7 +10,10 @@
 - 🖥️ **Wayland Native**: Works on GNOME, no X11 required
 - 🎨 **Overlay UI**: Dynamic Island-style status display
 
-## Quick Start
+# Quick Start
+
+> [!IMPORTANT]
+> **CRITICAL STEP:** After running the installer, you **MUST** log out and back in. This is required for group permissions (input) to take effect.
 
 ```bash
 # Clone the repo
@@ -20,11 +23,12 @@ cd wayvoxtral
 # Run installer (requires sudo)
 bash scripts/install.sh
 
-# Add your Mistral API key
+# 1. LOG OUT AND LOG BACK IN (REQUIRED!)
+
+# 2. Add your Mistral API key
 nano ~/.config/wayvoxtral/config.json
 
-# Log out and back in (for input group permissions)
-# Then start the service
+# 3. Start the service
 systemctl --user start wayvoxtral
 ```
 
