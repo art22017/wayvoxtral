@@ -1,0 +1,32 @@
+{
+  "api": {
+    "key": "YOUR_MISTRAL_API_KEY_HERE",
+    "model": "mistral-small-latest",
+    "endpoint": "https://api.mistral.ai/v1/audio/transcriptions"
+  },
+  "languages": {
+    "auto_detect": true,
+    "preferred": ["ru", "en"],
+    "primary": "ru"
+  },
+  "hotkeys": {
+    "toggle": "ctrl+space"
+  },
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "format": "wav",
+    "chunk_size": 2048,
+    "max_duration": 30
+  },
+  "ui": {
+    "theme": "dark",
+    "position": "top-center",
+    "animation_duration_ms": 200
+  },
+  "behavior": {
+    "auto_paste": true,
+    "copy_to_clipboard": true,
+    "show_notification": false
+  }
+}

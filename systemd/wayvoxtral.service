@@ -1,0 +1,25 @@
+[Unit]
+Description=WayVoxtral Push-to-Speech Daemon
+After=graphical-session.target
+PartOf=graphical-session.target
+Documentation=https://github.com/wayvoxtral/wayvoxtral
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/wayvoxtral/venv/bin/python -m wayvoxtral
+Restart=on-failure
+RestartSec=3
+
+# Environment for Wayland
+Environment="DISPLAY=:0"
+Environment="WAYLAND_DISPLAY=wayland-0"
+Environment="XDG_RUNTIME_DIR=/run/user/%U"
+
+# Security hardening
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.config/wayvoxtral %h/.cache/wayvoxtral /tmp
+
+[Install]
+WantedBy=default.target
