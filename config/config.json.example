@@ -1,8 +1,9 @@
 {
   "api": {
-    "key": "YOUR_MISTRAL_API_KEY_HERE",
-    "model": "mistral-small-latest",
-    "endpoint": "https://api.mistral.ai/v1/audio/transcriptions"
+    "key": "YOUR_GROQ_API_KEY",
+    "model": "whisper-large-v3",
+    "endpoint": "",
+    "proxy": "http://127.0.0.1:2080"
   },
   "languages": {
     "auto_detect": true,
@@ -10,7 +11,7 @@
     "primary": "ru"
   },
   "hotkeys": {
-    "toggle": "ctrl+space"
+    "toggle": "f9"
   },
   "audio": {
     "sample_rate": 16000,

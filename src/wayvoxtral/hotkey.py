@@ -14,8 +14,8 @@ from evdev import InputDevice, categorize, ecodes
 
 logger = logging.getLogger(__name__)
 
-# F24 - редко используемая клавиша, используется keyd для маппинга Ctrl+Space
-TARGET_KEY = ecodes.KEY_F24
+# F9 - глобальный хоткей для WayVoxtral
+TARGET_KEY = ecodes.KEY_F9
 
 
 class HotkeyListener:
@@ -42,12 +42,11 @@ class HotkeyListener:
         for event_file in input_path.glob("event*"):
             try:
                 device = InputDevice(str(event_file))
-                # Проверяем что устройство поддерживает клавиши
                 capabilities = device.capabilities()
                 if ecodes.EV_KEY in capabilities:
-                    # Проверяем наличие F24 в capabilities
                     key_caps = capabilities[ecodes.EV_KEY]
-                    if TARGET_KEY in key_caps:
+                    # Ищем клавиатуры с F9
+                    if ecodes.KEY_F9 in key_caps:
                         devices.append(device)
                         logger.debug(f"Found keyboard: {device.name}")
             except (OSError, PermissionError) as e:
@@ -57,18 +56,14 @@ class HotkeyListener:
         return devices
 
     async def wait_for_trigger(self) -> None:
-        """Wait for a single hotkey trigger (F24 keypress).
+        """Wait for a single hotkey trigger (F9 keypress).
 
-        Blocks until F24 key is pressed and released.
+        Blocks until F9 key is pressed and released.
         """
         devices = self._find_keyboard_devices()
 
         if not devices:
-            logger.warning(
-                "No keyboard devices found with F24 capability. "
-                "Make sure keyd is configured and you have input permissions."
-            )
-            # Fallback: ждём на всех input устройствах
+            logger.warning("No standard keyboards found. Checking all input devices.")
             devices = self._find_all_keyboards()
 
         if not devices:
@@ -77,36 +72,45 @@ class HotkeyListener:
                 "Add user to 'input' group: sudo usermod -aG input $USER"
             )
 
-        logger.debug(f"Monitoring {len(devices)} device(s) for F24 keypress")
-
+        logger.info(f"Monitoring {len(devices)} device(s) for F9 keypress")
+        
         # Создаём async readers для всех устройств
         loop = asyncio.get_event_loop()
         readers: dict[int, InputDevice] = {}
 
         for device in devices:
-            fd = device.fd
-            loop.add_reader(fd, lambda: None)  # Регистрируем для select
-            readers[fd] = device
+            try:
+                fd = device.fd
+                loop.add_reader(fd, lambda: None)  # Регистрируем для select
+                readers[fd] = device
+                logger.debug(f"Monitoring {device.name} at {device.path}")
+            except Exception as e:
+                logger.warning(f"Failed to monitor device {device.name}: {e}")
 
         try:
             while True:
                 # Ждём события на любом устройстве
-                await asyncio.sleep(0.01)  # Small delay to prevent busy loop
+                await asyncio.sleep(0.01)
 
                 for fd, device in readers.items():
                     try:
-                        for event in device.read():
-                            if event.type == ecodes.EV_KEY:
-                                key_event = categorize(event)
-                                # KEY_DOWN = 1, KEY_UP = 0
-                                if (
-                                    key_event.scancode == TARGET_KEY
-                                    and key_event.keystate == 1
-                                ):
-                                    logger.debug("F24 keypress detected")
-                                    return
-                    except BlockingIOError:
-                        # Нет событий на этом устройстве
+                        while True:
+                            # Читаем все доступные события
+                            try:
+                                for event in device.read():
+                                    if event.type == ecodes.EV_KEY:
+                                        key_event = categorize(event)
+                                        # KEY_DOWN = 1
+                                        if key_event.keystate == 1:
+                                            # logger.debug(f"Key detected: {key_event.keycode} ({key_event.scancode}) on {device.name}")
+                                            if key_event.scancode == TARGET_KEY:
+                                                logger.info("Hotkey (F9) detected!")
+                                                return
+                            except BlockingIOError:
+                                break
+                    except (OSError, Exception) as e:
+                        logger.error(f"Error reading device: {e}")
+                        await asyncio.sleep(0.1)
                         continue
 
         finally:
@@ -159,13 +163,3 @@ class HotkeyListener:
     def stop(self) -> None:
         """Stop the hotkey listener."""
         self._running = False
-
-
-def check_keyd_configured() -> bool:
-    """Check if keyd is configured for WayVoxtral.
-
-    Returns:
-        True if keyd config exists
-    """
-    keyd_config = Path("/etc/keyd/wayvoxtral.conf")
-    return keyd_config.exists()

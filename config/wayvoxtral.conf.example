@@ -3,10 +3,7 @@
 # Then run: sudo keyd reload
 
 [ids]
-# Apply to all keyboards
 *
 
 [main]
-# Intercept Ctrl+Space globally and convert to F24
-# F24 is a rarely used key that WayVoxtral listens for
-leftcontrol+space = macro(F24)
+leftcontrol+space = f24

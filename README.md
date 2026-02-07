@@ -34,16 +34,16 @@ systemctl --user start wayvoxtral
 
 ## Usage
 
-1. **Press Ctrl+Space** - Start recording (overlay shows "Recording...")
+1. **Press F9** - Start recording (overlay shows "Recording...")
 2. **Speak** - Up to 30 seconds
-3. **Press Ctrl+Space again** - Stop and transcribe
+3. **Press F9 again** - Stop and transcribe
 4. **Text appears** in the active application
 
 ## Requirements
 
 - Ubuntu 24.04+ with Wayland (GNOME)
 - Microphone
-- Mistral API key ([get one here](https://console.mistral.ai/))
+- Groq API key ([get one here](https://console.groq.com/keys))
 
 ## Configuration
 
@@ -52,7 +52,9 @@ Edit `~/.config/wayvoxtral/config.json`:
 ```json
 {
   "api": {
-    "key": "YOUR_MISTRAL_API_KEY"
+    "key": "YOUR_GROQ_API_KEY",
+    "model": "whisper-large-v3",
+    "proxy": "http://127.0.0.1:2080"
   },
   "languages": {
     "auto_detect": true,
@@ -71,21 +73,18 @@ systemctl --user status wayvoxtral
 
 # View logs
 journalctl --user -u wayvoxtral -f
-
-# Reload keyd config
-sudo keyd reload
 ```
 
 ## How It Works
 
 ```
-[Ctrl+Space] → keyd (converts to F24) → daemon (evdev listener)
-                                              ↓
-                                        [Recording via PyAudio]
-                                              ↓
-[Ctrl+Space] → keyd → daemon → [Mistral API transcription]
-                                              ↓
-                              [ydotool injects text into active window]
+[F9] → daemon (evdev listener)
+             ↓
+      [Recording via PyAudio]
+             ↓
+[F9] → daemon → [Mistral API transcription]
+             ↓
+      [ydotool injects text into active window]
 ```
 
 ## Troubleshooting

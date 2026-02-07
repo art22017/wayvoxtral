@@ -28,16 +28,8 @@ check_sudo() {
 install_system_deps() {
     echo -e "${YELLOW}📦 Installing system dependencies...${NC}"
     
-    # Add keyd PPA as it's not in default repos for 24.04
-    if ! apt-cache show keyd > /dev/null 2>&1; then
-        echo -e "${YELLOW}➕ Adding keyd PPA...${NC}"
-        sudo apt install -y software-properties-common
-        sudo add-apt-repository -y ppa:keyd-team/ppa
-        sudo apt update
-    fi
-
+    sudo apt update
     sudo apt install -y \
-        keyd \
         python3-pip \
         python3-venv \
         python3-dev \
@@ -52,34 +44,6 @@ install_system_deps() {
         ydotool
     
     echo -e "${GREEN}✓ System dependencies installed${NC}"
-}
-
-# Enable and configure keyd
-setup_keyd() {
-    echo -e "${YELLOW}⌨️  Configuring keyd for global hotkey...${NC}"
-    
-    # Check if keyd.rvaiya exists (PPA naming) and symlink it to keyd
-    if [ ! -f /usr/local/bin/keyd ] && [ -f /usr/bin/keyd.rvaiya ]; then
-        echo -e "${YELLOW}🔗 Creating symlink for keyd.rvaiya...${NC}"
-        sudo ln -s /usr/bin/keyd.rvaiya /usr/local/bin/keyd
-    fi
-    
-    # Copy keyd config
-    sudo cp config/wayvoxtral.conf.example /etc/keyd/wayvoxtral.conf
-    
-    # Enable and start keyd
-    sudo systemctl enable keyd
-    sudo systemctl restart keyd
-    
-    # Reload keyd config
-    # Use the symlink or binary directly
-    if command -v keyd > /dev/null; then
-        sudo keyd reload
-    elif command -v keyd.rvaiya > /dev/null; then
-        sudo keyd.rvaiya reload
-    fi
-    
-    echo -e "${GREEN}✓ keyd configured (Ctrl+Space → F24)${NC}"
 }
 
 # Setup ydotool
@@ -138,7 +102,7 @@ setup_config() {
     
     if [ ! -f "$CONFIG_DIR/config.json" ]; then
         cp config/config.json.example "$CONFIG_DIR/config.json"
-        echo -e "${YELLOW}⚠️  Edit $CONFIG_DIR/config.json to add your Mistral API key${NC}"
+        echo -e "${YELLOW}⚠️  Edit $CONFIG_DIR/config.json to add your Groq API key${NC}"
     else
         echo -e "${GREEN}✓ Configuration already exists${NC}"
     fi
@@ -175,7 +139,6 @@ main() {
     cd "$SCRIPT_DIR/.."
     
     install_system_deps
-    setup_keyd
     setup_ydotool
     setup_venv
     setup_config
@@ -188,9 +151,9 @@ main() {
     echo -e "${RED}❗ CRITICAL STEP: LOG OUT AND BACK IN (REQUIRED FOR PERMISSIONS)${NC}"
     echo ""
     echo "Then follow these steps:"
-    echo "  1. Edit ~/.config/wayvoxtral/config.json and add your Mistral API key"
+    echo "  1. Edit ~/.config/wayvoxtral/config.json -> add Groq API key (and proxy if needed)"
     echo "  2. Start the service: systemctl --user start wayvoxtral"
-    echo "  3. Press Ctrl+Space to start recording!"
+    echo "  3. Press F9 to start recording!"
     echo ""
     echo "Useful commands:"
     echo "  - Check status: systemctl --user status wayvoxtral"

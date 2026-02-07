@@ -17,6 +17,7 @@ dependencies = [
     "pyaudio>=0.2.14",
     "evdev>=1.6.0",
     "PyGObject>=3.46.0",
+    "groq>=0.4.0",
 ]
 
 [project.optional-dependencies]

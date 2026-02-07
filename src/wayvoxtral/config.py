@@ -12,16 +12,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class APIConfig(BaseModel):
-    """Mistral/Voxtral API configuration."""
+    """Groq API configuration."""
 
-    key: str = Field(default="", description="Mistral API key")
+    key: str = Field(default="", description="Groq API key")
     model: str = Field(
-        default="mistral-small-latest",
-        description="Voxtral model for transcription",
+        default="whisper-large-v3",
+        description="Groq Whisper model version",
     )
     endpoint: str = Field(
-        default="https://api.mistral.ai/v1/audio/transcriptions",
-        description="Transcription API endpoint",
+        default="",  # Not used by Groq SDK unless customized
+        description="Custom API endpoint (optional)",
+    )
+    proxy: str = Field(
+        default="http://127.0.0.1:2080",
+        description="Proxy URL (e.g. http://127.0.0.1:2080)",
     )
 
 
@@ -90,8 +94,8 @@ class Config(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        json_file=Path.home() / ".config" / "wayvoxtral" / "config.json",
-        json_file_encoding="utf-8",
+        # json_file=Path.home() / ".config" / "wayvoxtral" / "config.json",
+        # json_file_encoding="utf-8",
         extra="ignore",
     )
 

@@ -30,28 +30,51 @@ class OverlayState(Enum):
 # CSS стили для overlay
 OVERLAY_CSS = """
 window.overlay {
-    background: rgba(0, 0, 0, 0.85);
-    border-radius: 24px;
-    padding: 12px 20px;
+    background: rgba(20, 20, 20, 0.65);
+    border-radius: 16px;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 window.overlay label {
-    color: white;
-    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
     font-weight: 500;
     font-family: "Inter", "SF Pro Display", system-ui, sans-serif;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+window.overlay.recording {
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    background: rgba(20, 30, 20, 0.75);
 }
 
 window.overlay.recording label {
     color: #4ade80;
 }
 
+window.overlay.processing {
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    background: rgba(20, 25, 35, 0.75);
+}
+
 window.overlay.processing label {
     color: #60a5fa;
 }
 
+window.overlay.success {
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: rgba(20, 30, 25, 0.75);
+}
+
 window.overlay.success label {
     color: #10b981;
+}
+
+window.overlay.error {
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(40, 20, 20, 0.75);
 }
 
 window.overlay.error label {
@@ -59,12 +82,13 @@ window.overlay.error label {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1.0; }
-    50% { opacity: 0.6; }
+    0% { opacity: 1.0; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.98); }
+    100% { opacity: 1.0; transform: scale(1); }
 }
 
 .pulsing {
-    animation: pulse 1.5s infinite;
+    animation: pulse 2s infinite ease-in-out;
 }
 """
 
@@ -98,8 +122,8 @@ class OverlayWindow(Gtk.Window):
         # Без декораций
         self.set_decorated(False)
 
-        # Размеры
-        self.set_default_size(280, 48)
+        # Размеры (компактный)
+        self.set_default_size(180, 36)
         self.set_resizable(False)
 
         # Всегда сверху (hint для compositor)
@@ -127,7 +151,7 @@ class OverlayWindow(Gtk.Window):
     def _setup_widgets(self) -> None:
         """Create UI widgets."""
         # Основной контейнер
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         box.set_halign(Gtk.Align.CENTER)
         box.set_valign(Gtk.Align.CENTER)
 
@@ -205,7 +229,7 @@ class OverlayWindow(Gtk.Window):
         """Update the recording label with current time."""
         minutes = self._elapsed_seconds // 60
         secs = self._elapsed_seconds % 60
-        self._label.set_text(f"🎙️  Recording... [{minutes}:{secs:02d}]")
+        self._label.set_text(f"🎙️ {minutes}:{secs:02d}")
 
     def _on_timer_tick(self) -> bool:
         """Timer callback for updating recording time.
@@ -230,7 +254,7 @@ class OverlayWindow(Gtk.Window):
         self.add_css_class("processing")
         self._label.remove_css_class("pulsing")
 
-        self._label.set_text("⏳  Processing...")
+        self._label.set_text("Processing...")
         self._spinner.set_visible(True)
         self._spinner.start()
 
@@ -252,8 +276,8 @@ class OverlayWindow(Gtk.Window):
         self._label.remove_css_class("pulsing")
 
         # Обрезаем длинный текст
-        preview = text[:40] + "..." if len(text) > 40 else text
-        self._label.set_text(f"✓  {preview}")
+        preview = text[:25] + "..." if len(text) > 25 else text
+        self._label.set_text(f"✓ {preview}")
 
         self._spinner.set_visible(False)
         self._spinner.stop()
@@ -279,8 +303,8 @@ class OverlayWindow(Gtk.Window):
         self._label.remove_css_class("pulsing")
 
         # Обрезаем длинное сообщение
-        short_msg = message[:50] + "..." if len(message) > 50 else message
-        self._label.set_text(f"❌  {short_msg}")
+        short_msg = message[:25] + "..." if len(message) > 25 else message
+        self._label.set_text(f"❌ {short_msg}")
 
         self._spinner.set_visible(False)
         self._spinner.stop()
