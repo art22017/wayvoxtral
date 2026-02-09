@@ -22,4 +22,4 @@ ProtectHome=read-only
 ReadWritePaths=%h/.config/wayvoxtral %h/.cache/wayvoxtral /tmp
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target

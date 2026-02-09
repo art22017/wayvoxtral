@@ -147,6 +147,8 @@ class OverlayWindow(Gtk.Window):
                 css_provider,
                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
             )
+        else:
+            logger.warning("No default display found, CSS might not be applied correctly")
 
     def _setup_widgets(self) -> None:
         """Create UI widgets."""

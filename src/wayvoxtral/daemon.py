@@ -94,11 +94,23 @@ class WayVoxtralDaemon:
         self._load_config()
         self._init_components()
 
+        # Инициализируем GTK явно и проверяем наличие дисплея
+        logger.debug("Initializing GTK...")
+        success, _ = Gtk.init_check()
+        if not success:
+            logger.error(
+                "Gtk couldn't be initialized. "
+                "Check if DISPLAY or WAYLAND_DISPLAY environment variables are set "
+                "and if you have access to the X/Wayland server."
+            )
+            return
+
         # Создаём GTK Application
         self._app = Gtk.Application(application_id="com.wayvoxtral.daemon")
         self._app.connect("activate", self._on_activate)
 
         # Запускаем
+        logger.info("Starting GTK application loop")
         self._app.run(None)
 
     def _on_activate(self, app: Gtk.Application) -> None:
@@ -170,9 +182,23 @@ class WayVoxtralDaemon:
         if self._state != DaemonState.RECORDING:
             return False
 
-        if self._audio_recorder is not None and self._overlay is not None:
-            elapsed = int(self._audio_recorder.get_elapsed_time())
-            GLib.idle_add(self._overlay.show_recording, elapsed)
+        if self._audio_recorder is None or self._overlay is None:
+            return True
+
+        if not self._audio_recorder.is_recording():
+            # Запись остановилась сама (достигнут лимит)
+            logger.info("Recording stopped automatically (max duration), transcribing...")
+            
+            # Запускаем остановку и транскрибацию асинхронно
+            if self._main_loop and self._main_loop.is_running():
+                asyncio.run_coroutine_threadsafe(
+                    self._stop_recording_and_transcribe(),
+                    self._main_loop
+                )
+            return False
+
+        elapsed = int(self._audio_recorder.get_elapsed_time())
+        GLib.idle_add(self._overlay.show_recording, elapsed)
 
         return True
 

@@ -14,8 +14,8 @@ from evdev import InputDevice, categorize, ecodes
 
 logger = logging.getLogger(__name__)
 
-# F9 - глобальный хоткей для WayVoxtral
-TARGET_KEY = ecodes.KEY_F9
+# F24 - глобальный хоткей для WayVoxtral (mapped from Ctrl+Space by keyd)
+TARGET_KEY = ecodes.KEY_F24
 
 
 class HotkeyListener:
