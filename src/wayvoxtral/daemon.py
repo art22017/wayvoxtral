@@ -96,7 +96,7 @@ class WayVoxtralDaemon:
 
         # Инициализируем GTK явно и проверяем наличие дисплея
         logger.debug("Initializing GTK...")
-        success, _ = Gtk.init_check()
+        success = Gtk.init_check()
         if not success:
             logger.error(
                 "Gtk couldn't be initialized. "
